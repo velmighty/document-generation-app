@@ -2,17 +2,28 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { signIn } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Signup() {
   const router = useRouter();
   const { plan } = router.query;
+  const { status } = useAuth();
   
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [selectedPlan, setSelectedPlan] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Przekieruj zalogowanego użytkownika
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/dashboard');
+    }
+  }, [status, router]);
 
   useEffect(() => {
     if (plan) {
@@ -31,22 +42,50 @@ export default function Signup() {
     setIsLoading(true);
     setError('');
 
-    // W przyszłości tutaj będzie integracja z Firebase Auth lub NextAuth.js
     try {
-      // Symulacja opóźnienia rejestracji
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Tutaj będzie prawdziwa rejestracja
-      console.log('Rejestracja z:', email, password, selectedPlan);
-      
-      // Przekierowanie po rejestracji
-      // router.push('/dashboard');
-    } catch (err) {
-      setError('Wystąpił błąd podczas rejestracji. Spróbuj ponownie.');
+      // Rejestracja użytkownika przez API
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          plan: selectedPlan,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Wystąpił błąd podczas rejestracji');
+      }
+
+      // Automatyczne logowanie po rejestracji
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (result?.error) {
+        setError('Rejestracja udana, ale wystąpił błąd podczas logowania. Proszę zalogować się ręcznie.');
+        router.push('/login');
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Wystąpił błąd podczas rejestracji. Spróbuj ponownie.');
       console.error(err);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleOAuthSignIn = (provider: string) => {
+    signIn(provider, { callbackUrl: '/dashboard' });
   };
 
   return (
@@ -74,6 +113,20 @@ export default function Signup() {
           )}
           
           <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label htmlFor="name" className="block text-gray-700 font-medium mb-2">
+                Imię i nazwisko
+              </label>
+              <input
+                type="text"
+                id="name"
+                className="input-field"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            
             <div className="mb-4">
               <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
                 Adres e-mail
@@ -181,6 +234,7 @@ export default function Signup() {
               <button
                 type="button"
                 className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+                onClick={() => handleOAuthSignIn('google')}
               >
                 <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                   <path
@@ -194,6 +248,7 @@ export default function Signup() {
               <button
                 type="button"
                 className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+                onClick={() => handleOAuthSignIn('facebook')}
               >
                 <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                   <path

@@ -1,34 +1,52 @@
 import Head from 'next/head';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/router';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
+  const { status } = useAuth();
+
+  // Przekieruj zalogowanego użytkownika
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/dashboard');
+    }
+  }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    // W przyszłości tutaj będzie integracja z Firebase Auth lub NextAuth.js
     try {
-      // Symulacja opóźnienia logowania
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Tutaj będzie prawdziwe logowanie
-      console.log('Logowanie z:', email, password);
-      
-      // Przekierowanie po zalogowaniu
-      // router.push('/dashboard');
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (result?.error) {
+        setError('Nieprawidłowy email lub hasło');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err) {
       setError('Wystąpił błąd podczas logowania. Spróbuj ponownie.');
       console.error(err);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleOAuthSignIn = (provider: string) => {
+    signIn(provider, { callbackUrl: '/dashboard' });
   };
 
   return (
@@ -121,6 +139,7 @@ export default function Login() {
               <button
                 type="button"
                 className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+                onClick={() => handleOAuthSignIn('google')}
               >
                 <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                   <path
@@ -134,6 +153,7 @@ export default function Login() {
               <button
                 type="button"
                 className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+                onClick={() => handleOAuthSignIn('facebook')}
               >
                 <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                   <path
