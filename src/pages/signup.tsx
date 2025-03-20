@@ -84,8 +84,9 @@ export default function Signup() {
     }
   };
 
-  const handleOAuthSignIn = (provider: string) => {
-    signIn(provider, { callbackUrl: '/dashboard' });
+  const handleGoogleSignIn = () => {
+    setIsLoading(true);
+    signIn('google', { callbackUrl: '/dashboard' });
   };
 
   return (
@@ -104,7 +105,7 @@ export default function Signup() {
 
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
-          <h1 className="text-2xl font-bold text-center mb-6">Utwórz konto</h1>
+          <h1 className="text-2xl font-bold text-center mb-6 text-gray-900">Utwórz konto</h1>
           
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -114,7 +115,7 @@ export default function Signup() {
           
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="name" className="block text-gray-700 font-medium mb-2">
+              <label htmlFor="name" className="form-label">
                 Imię i nazwisko
               </label>
               <input
@@ -128,7 +129,7 @@ export default function Signup() {
             </div>
             
             <div className="mb-4">
-              <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
+              <label htmlFor="email" className="form-label">
                 Adres e-mail
               </label>
               <input
@@ -142,7 +143,7 @@ export default function Signup() {
             </div>
             
             <div className="mb-4">
-              <label htmlFor="password" className="block text-gray-700 font-medium mb-2">
+              <label htmlFor="password" className="form-label">
                 Hasło
               </label>
               <input
@@ -160,7 +161,7 @@ export default function Signup() {
             </div>
             
             <div className="mb-6">
-              <label htmlFor="confirmPassword" className="block text-gray-700 font-medium mb-2">
+              <label htmlFor="confirmPassword" className="form-label">
                 Potwierdź hasło
               </label>
               <input
@@ -174,26 +175,26 @@ export default function Signup() {
             </div>
             
             <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">
+              <label className="form-label">
                 Wybierz plan
               </label>
               <div className="grid grid-cols-3 gap-3">
                 <div 
-                  className={`border rounded-md p-3 text-center cursor-pointer ${selectedPlan === 'mini' ? 'border-primary-500 bg-primary-50' : 'border-gray-300'}`}
+                  className={`border rounded-md p-3 text-center cursor-pointer transition-all ${selectedPlan === 'mini' ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-primary-300'}`}
                   onClick={() => setSelectedPlan('mini')}
                 >
                   <div className="font-bold">Mini</div>
                   <div className="text-sm text-gray-500">29 zł/mies.</div>
                 </div>
                 <div 
-                  className={`border rounded-md p-3 text-center cursor-pointer ${selectedPlan === 'standard' ? 'border-primary-500 bg-primary-50' : 'border-gray-300'}`}
+                  className={`border rounded-md p-3 text-center cursor-pointer transition-all ${selectedPlan === 'standard' ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-primary-300'}`}
                   onClick={() => setSelectedPlan('standard')}
                 >
                   <div className="font-bold">Standard</div>
                   <div className="text-sm text-gray-500">59 zł/mies.</div>
                 </div>
                 <div 
-                  className={`border rounded-md p-3 text-center cursor-pointer ${selectedPlan === 'maks' ? 'border-primary-500 bg-primary-50' : 'border-gray-300'}`}
+                  className={`border rounded-md p-3 text-center cursor-pointer transition-all ${selectedPlan === 'maks' ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-primary-300'}`}
                   onClick={() => setSelectedPlan('maks')}
                 >
                   <div className="font-bold">Maks</div>
@@ -211,9 +212,9 @@ export default function Signup() {
             </button>
             
             <div className="mt-6 text-center">
-              <p className="text-gray-600">
+              <p className="text-gray-700">
                 Masz już konto?{' '}
-                <Link href="/login" className="text-primary-600 hover:underline">
+                <Link href="/login" className="text-primary-600 hover:text-primary-700">
                   Zaloguj się
                 </Link>
               </p>
@@ -230,11 +231,12 @@ export default function Signup() {
               </div>
             </div>
             
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="mt-6">
               <button
                 type="button"
-                className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center"
-                onClick={() => handleOAuthSignIn('google')}
+                className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center transition duration-150 ease-in-out"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
               >
                 <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                   <path
@@ -243,20 +245,6 @@ export default function Signup() {
                   />
                 </svg>
                 Google
-              </button>
-              
-              <button
-                type="button"
-                className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center"
-                onClick={() => handleOAuthSignIn('facebook')}
-              >
-                <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
-                  <path
-                    fill="#1877F2"
-                    d="M23.9981 11.9991C23.9981 5.37216 18.626 0 11.9991 0C5.37216 0 0 5.37216 0 11.9991C0 17.9882 4.38789 22.9522 10.1242 23.8524V15.4676H7.07758V11.9991H10.1242V9.35553C10.1242 6.34826 11.9156 4.68714 14.6564 4.68714C15.9692 4.68714 17.3424 4.92149 17.3424 4.92149V7.87439H15.8294C14.3388 7.87439 13.8739 8.79933 13.8739 9.74824V11.9991H17.2018L16.6698 15.4676H13.8739V23.8524C19.6103 22.9522 23.9981 17.9882 23.9981 11.9991Z"
-                  />
-                </svg>
-                Facebook
               </button>
             </div>
           </div>
